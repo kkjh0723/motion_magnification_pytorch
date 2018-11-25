@@ -59,29 +59,32 @@ class Encoder(nn.Module):
     def __init__(self, num_resblk):
         super(Encoder, self).__init__()
         # common representation
-        self.pad = nn.ReflectionPad2d(3)
+        self.pad1 = nn.ReflectionPad2d(3)
         self.conv1 = nn.Conv2d(3, 16, kernel_size=7, stride=1, bias=False)
+        self.pad2 = nn.ReflectionPad2d(1)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=2, bias=False)
         self.resblks = _make_layer(ResBlock, 32, 32, num_resblk)
         self.relu = nn.ReLU(inplace=True)
 
         # texture representation
+        self.pad1_text = nn.ReflectionPad2d(1)
         self.conv1_text = nn.Conv2d(32, 32, kernel_size=3, stride=2, bias=False)
         self.resblks_text = _make_layer(ResBlock, 32, 32, 2)
         
         # shape representation
+        self.pad1_shape = nn.ReflectionPad2d(1)
         self.conv1_shape = nn.Conv2d(32, 32, kernel_size=3, stride=1, bias=False)
         self.resblks_shape = _make_layer(ResBlock, 32, 32, 2)
 
     def forward(self, x):
-        c = self.relu(self.conv1(self.pad(x)))
-        c = self.relu(self.conv2(c))
+        c = self.relu(self.conv1(self.pad1(x)))
+        c = self.relu(self.conv2(self.pad2(c)))
         c = self.resblks(c)
 
-        v = self.relu(self.conv1_text(c))
+        v = self.relu(self.conv1_text(self.pad1_text(c)))
         v = self.resblks_text(v)
         
-        m = self.relu(self.conv1_shape(c))
+        m = self.relu(self.conv1_shape(self.pad1_shape(c)))
         m = self.resblks_shape(m)
 
         return v, m # v: texture, m: shape 
@@ -106,15 +109,13 @@ class Decoder(nn.Module):
     def __init__(self, num_resblk):
         super(Decoder, self).__init__()
         # texture 
-        self.upsample_text = nn.UpsamplingNearest2d(size=(189,189))
-        #self.upsample_text = nn.UpsamplingNearest2d(scale_factor=2)
+        self.upsample_text = nn.UpsamplingNearest2d(scale_factor=2)
         self.pad_text = nn.ReflectionPad2d(1)
         self.conv1_text = nn.Conv2d(32, 32, kernel_size=3, stride=1, bias=False)
         self.relu = nn.ReLU(inplace=True)
         # common blocks
         self.resblks = _make_layer(ResBlock, 64, 64, num_resblk)
-        self.upsample = nn.UpsamplingNearest2d(size=(384,384))
-        #self.upsample = nn.UpsamplingNearest2d(scale_factor=2)
+        self.upsample = nn.UpsamplingNearest2d(scale_factor=2)
         self.pad1 = nn.ReflectionPad2d(1)
         self.conv1 = nn.Conv2d(64, 32, kernel_size=3, stride=1, bias=False)
         self.pad2 = nn.ReflectionPad2d(3)
