@@ -91,7 +91,7 @@ def main():
     cudnn.benchmark = True
 
     # data loader
-    dataset_mag = ImageFromFolderTest(args.video_path, mag=args.amp, mode=args.mode, num_data=args.num_data, preprocessing=True) 
+    dataset_mag = ImageFromFolderTest(args.video_path, mag=args.amp, mode=args.mode, num_data=args.num_data, preprocessing=False) 
     data_loader = data.DataLoader(dataset_mag, 
         batch_size=args.batch_size, 
         shuffle=False, 
