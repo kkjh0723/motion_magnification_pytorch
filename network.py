@@ -29,7 +29,7 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         y = self.relu(self.conv1(self.pad1(x)))
-        y = self.conv2(self.pad2(x))
+        y = self.conv2(self.pad2(y))
         return y + x
 
 class ConvBlock(nn.Module):
